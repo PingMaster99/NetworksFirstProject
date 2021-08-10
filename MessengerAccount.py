@@ -87,7 +87,8 @@ class MessengerAccount(ClientXMPP):
 
     def add_user_to_contacts(self):
         # Subscribe
-        self.send_presence_subscription(pto='admin@alumchat.xyz', pfrom='echobot@alumchat.xyz')
+        username = str(("Username to add as a contact\n>> "))
+        self.send_presence_subscription(pto=username, pfrom='echobot@alumchat.xyz')
 
     def start_conversation(self):
         pass
@@ -96,6 +97,8 @@ class MessengerAccount(ClientXMPP):
         pass
 
     def delete_account(self):
+        engine = self.Iq()
+        engine['register']['remove'] = True
         pass
 
 
