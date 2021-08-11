@@ -2,36 +2,44 @@ import slixmpp
 from MessengerAccount import MessengerAccount
 from client import Client
 import logging
+import constants
+from registration import Registration
 
 def main():
+    running = True
+    while running:
+        option = input(constants.APP_MENU)
 
+        try:
+            option = int(option)
+        except ValueError:
+            print("Incorrect option")
+            continue
 
-    start_message = """
-    Welcome to the secret internet of the robots.
-    
-    Select an option:
-    1 -> Register a new account
-    2 -> Log in
-    """
-    menu = """
-    Select an option to proceed:
-    1 -> Log out
-    2 -> Delete account
-    3 -> Show all users & contacts
-    4 -> Add a user to contacts
-    5 -> Start a conversation
-    6 -> Start a group chat
-    7 -> Define presence message
-    >> 
-    """
-    while True:
-        print(start_message)
-        input(">> ")
+        if option == 1:
+            jid = input("Username: ")
+            password = input("Password: ")
+            jid = f"{jid}@192.168.56.1"     #TODO: change this to alumchat
 
+            xmpp = Registration(jid, password)
+            xmpp.register_plugin('xep_0030')  # Service Discovery
+            xmpp.register_plugin('xep_0004')  # Data forms
+            xmpp.register_plugin('xep_0066')  # Out-of-band Data
+            xmpp.register_plugin('xep_0077')  # In-band Registration
+            xmpp['xep_0077'].force_registration = True
+            xmpp.connect()
+            xmpp.process(forever=False)
 
+        elif option == 2:
+            jid = input("Username: ")
+            password = input("Password: ")
+            xmpp = MessengerAccount(jid, password)
+            xmpp.connect()
+            xmpp.process()
 
-
-    print("Hello world!")
+        elif option == 3:
+            print("Thank you for using the XMPP secret chat")
+            exit()
 
 
 if __name__ == '__main__':
