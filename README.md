@@ -31,4 +31,4 @@ CLI client that supports the XMPP protocol. Includes account administration and 
 - Notifications
 - Files
 
-
+print("Thank you for reading this :)")
