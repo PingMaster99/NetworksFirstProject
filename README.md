@@ -24,7 +24,7 @@ CLI client that supports the XMPP protocol. Includes account administration and 
 ### Communication
 - Show all users
 - Add a user to contacts
-- Show contact details of a user
+- Show contact details of users
 - Send a message to a user/contact
 - Participate in group chats
 - Define presence message
