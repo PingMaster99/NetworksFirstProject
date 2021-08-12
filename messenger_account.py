@@ -1,10 +1,14 @@
 """
+    messenger_account.py
+    Author: Pablo Ruiz 18259 (PingMaster99)
+    Version 1.0
+    Updated August 12, 2021
 
-Reference: https://lab.louiz.org/poezio/slixmpp/-/blob/master/examples/roster_browser.py
+    Client that uses XMPP protocol to communicate.
+    Base reference for slixmpp implementations: https://lab.louiz.org/poezio/slixmpp/-/tree/master/examples
 """
 
 import asyncio
-import logging
 import constants
 from aioconsole import ainput
 from slixmpp import ClientXMPP, exceptions
@@ -36,13 +40,13 @@ class MessengerAccount(ClientXMPP):
         print(event['type'])
         if event['type'] in ('chat', 'normal'):
             print(f"New message from {event['from'].username}: {event['body']}")
-        elif event['type'] in ('groupchat'):
+        elif event['type'] == 'groupchat':
             print(f"New message from group {event['from']}: {event['body']}")
-        elif event['type'] in ('headline'):
+        elif event['type'] == 'headline':
             print(f"Headline received: {event['body']}")
-        elif event['type'] in ('error'):
+        elif event['type'] == 'error':
             print(f"An error has occurred: {event['body']}")
-        elif event['type'] in ('subscribe'):
+        elif event['type'] == 'subscribe':
             print(f"New subscription received from: {event['from'].username}")
 
     @staticmethod
@@ -121,8 +125,8 @@ class MessengerAccount(ClientXMPP):
             if option == 7:     # Change status message
                 await self.change_presence_message()
 
-            elif option == 8:   # TODO: ADD FILE SENDING
-                pass
+            elif option == 8:   # Send file
+                await self.send_file()
 
             elif option == 9:   # Exit
                 self.end_session()
@@ -163,7 +167,6 @@ class MessengerAccount(ClientXMPP):
     def wait_for_presences(self, pres):
         """
         Track how many roster entries have received presence updates.
-        Reference: https://lab.louiz.org/poezio/slixmpp/-/blob/master/examples/roster_browser.py
         """
         self.received.add(pres['from'].bare)
         if len(self.received) >= len(self.client_roster.keys()):
@@ -207,19 +210,21 @@ class MessengerAccount(ClientXMPP):
             print("Timeout error, please try again")
             await self.disconnect()
 
+    async def send_file(self):
+        filename = str(await(ainput("Introduce the name of the file to send with extension\n>> ")))
+        recipient = str(await(ainput("Recipient's username\n>> ")))
+        recipient += "@alumchat.xyz"
+        try:
+            url = await self.plugin['xep_0363'].upload_file(
+                filename, domain='alumchat.xyz', timeout=10)
+        except exceptions.IqTimeout:
+            raise TimeoutError('Could not send message in time')
 
-if __name__ == '__main__':
-    # Ideally use optparse or argparse to get JID,
-    # password, and log level.
-
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(levelname)-8s %(message)s')
-
-    xmpp = MessengerAccount('echobot@192.168.56.1', 'eco')
-    xmpp['feature_mechanisms'].unencrypted_plain = True
-    xmpp.register_plugin('xep_0199')
-    xmpp.connect()
-    print("Conectado!")
-    xmpp.process()
-    xmpp.disconnect()
-
+        html = (
+            f'<body xmlns="http://www.w3.org/1999/xhtml">'
+            f'<a href="{url}">{url}</a></body>'
+        )
+        message = self.make_message(mto=recipient, mbody=url, mhtml=html)
+        print("Message sent")
+        message['oob']['url'] = url
+        message.send()

@@ -1,12 +1,21 @@
-import slixmpp
-from MessengerAccount import MessengerAccount
-from client import Client
+"""
+    main.py
+    Author: Pablo Ruiz 18259 (PingMaster99)
+    Version 1.0
+    Updated August 12, 2021
+
+    Main file to run the XMPP client
+"""
+
+from messenger_account import MessengerAccount
 import logging
 import constants
 from registration import Registration
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(levelname)-8s %(message)s')
+if constants.LOGGING:
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(levelname)-8s %(message)s')
+
 
 def main():
     running = True
@@ -19,7 +28,7 @@ def main():
             print("Incorrect option")
             continue
 
-        if option == 1:
+        if option == 1:     # Register
             jid = input("Username: ")
             password = input("Password: ")
             if constants.SERVER not in jid:
@@ -34,7 +43,7 @@ def main():
             xmpp.connect()
             xmpp.process(forever=False)
 
-        elif option == 2:
+        elif option == 2:   # Login
             jid = input("Username: ")
             password = input("Password: ")
             if constants.SERVER not in jid:
@@ -48,7 +57,7 @@ def main():
             xmpp.process(forever=False)
             xmpp.disconnect()
 
-        elif option == 3:
+        elif option == 3:   # Exit
             print("Thank you for using the XMPP secret chat")
             exit()
 

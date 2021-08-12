@@ -1,3 +1,12 @@
+"""
+    constants.py
+    Author: Pablo Ruiz 18259 (PingMaster99)
+    Version 1.0
+    Updated August 12, 2021
+
+    Constants used for XMPP client
+"""
+
 APP_MENU = """
 Select an option to proceed:
 1 -> Register a new account
@@ -19,5 +28,6 @@ Select an option to proceed:
 9 -> Exit
 >> """
 
-SERVER = "@192.168.56.1"    #TODO: CHANGE TO ALUMCHAT
 
+SERVER = "@alumchat.xyz"    # Change to @192.168.56.1 or ipv4 value if using a local server
+LOGGING = False             # Change to True if you want logging

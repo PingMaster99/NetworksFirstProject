@@ -1,6 +1,15 @@
-import logging
+"""
+    registration.py
+    Author: Pablo Ruiz 18259 (PingMaster99)
+    Version 1.0
+    Updated August 12, 2021
+
+    Client that uses XMPP protocol to communicate.
+    Base reference for slixmpp implementation: https://groups.google.com/g/sleekxmpp-discussion/c/iAFJGcpH-Ps
+"""
+
+
 from slixmpp import ClientXMPP, exceptions
-# Reference: https://groups.google.com/g/sleekxmpp-discussion/c/iAFJGcpH-Ps
 
 
 class Registration(ClientXMPP):
@@ -33,10 +42,3 @@ class Registration(ClientXMPP):
         except exceptions.IqTimeout as e:
             print("Timeout error, please try again")
             await self.disconnect()
-
-
-
-
-
-
-
