@@ -22,7 +22,7 @@ def main():
         if option == 1:
             jid = input("Username: ")
             password = input("Password: ")
-            if constants.SERVER not in jid:  # TODO: change this to alumchat
+            if constants.SERVER not in jid:
                 jid += constants.SERVER
 
             xmpp = Registration(jid, password)

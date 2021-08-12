@@ -10,6 +10,7 @@ from aioconsole import ainput
 from slixmpp import ClientXMPP, exceptions
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+
 class MessengerAccount(ClientXMPP):
 
     def __init__(self, jid, password):
@@ -17,18 +18,37 @@ class MessengerAccount(ClientXMPP):
 
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
-        self.register_plugin('xep_0059')
-        self.register_plugin('xep_0060')
+        self.register_plugin('xep_0059')  # Result set management
+        self.register_plugin('xep_0060')  # Publish-subscribe
         self.register_plugin('xep_0077')  # In-Band Registration
         self.register_plugin('xep_0045')  # Multi-User Chat
-
         self.add_event_handler("session_start", self.session_start)
         self.add_event_handler("session_start", self.messaging_app)
         self.add_event_handler("failed_auth", self.failed_auth)
-        self.add_event_handler("message", self.session_start)
+        self.add_event_handler("message", self.get_notification)
         self.add_event_handler("changed_status", self.wait_for_presences)
+        self.add_event_handler("roster_subscription_request", self.get_notification)
+        self.add_event_handler("groupchat_invite", self.group_chat_invite)
         self.received = set()
         self.presences_received = asyncio.Event()
+
+    @staticmethod
+    def get_notification(event):
+        print(event['type'])
+        if event['type'] in ('chat', 'normal'):
+            print(f"New message from {event['from'].username}: {event['body']}")
+        elif event['type'] in ('groupchat'):
+            print(f"New message from group {event['from']}: {event['body']}")
+        elif event['type'] in ('headline'):
+            print(f"Headline received: {event['body']}")
+        elif event['type'] in ('error'):
+            print(f"An error has occurred: {event['body']}")
+        elif event['type'] in ('subscribe'):
+            print(f"New subscription received from: {event['from'].username}")
+
+    @staticmethod
+    def group_chat_invite(event):
+        print(f"New groupchat invite. Room: {event['from']}")
 
     async def session_start(self, event):
         try:
@@ -38,15 +58,12 @@ class MessengerAccount(ClientXMPP):
 
         self.send_presence()
 
-
-
-
-
-
-    def failed_auth(self, event):
+    @staticmethod
+    def failed_auth(event):
         print("La cuenta introducida no existe")
 
-    def validate_input(self, option):
+    @staticmethod
+    def validate_input(option):
         try:
             option = int(option)
             if 8 >= option >= 1:
@@ -78,8 +95,9 @@ class MessengerAccount(ClientXMPP):
             if option == 3:     # Show contacts
                 await self.show_users_and_contacts()
 
-            if option == 4:     # Add contact TODO THIS
-                self.add_user_to_contacts()
+            if option == 4:     # Add contact
+                await self.add_user_to_contacts()
+                continue
 
             if option == 5:     # Send a message
                 try:
@@ -92,11 +110,22 @@ class MessengerAccount(ClientXMPP):
                 except AttributeError:
                     print("El usuario no es correcto")
                 continue
-            if option == 6:     # TODO THIS
-                self.start_group_chat()
+            if option == 6:     # Group message
+                room_name = str(await ainput("Introduce the room name:\n>> "))
+                room_name = f"{room_name}@conference.alumchat.xyz"
+                self.plugin['xep_0045'].join_muc(room_name, self.username)
+
+                message = str(await ainput("Message to send:\n>> "))
+                self.send_message(room_name, message, mtype='groupchat')
+                continue
+
             if option == 7:     # Change status message
                 await self.change_presence_message()
-            elif option == 8:   # Exit
+
+            elif option == 8:   # TODO: ADD FILE SENDING
+                pass
+
+            elif option == 9:   # Exit
                 self.end_session()
             else:
                 print("Invalid option")
@@ -150,18 +179,15 @@ class MessengerAccount(ClientXMPP):
 
         self.send_presence(pshow=status, pstatus=status_message, pnick=nickname)
 
-    def add_user_to_contacts(self):
+    async def add_user_to_contacts(self):
         # Subscribe
-        username = input("Username to add as a contact\n>> ")
-        self.send_presence_subscription(pto=f"{username}@alumchat.xyz", pfrom='echobot@alumchat.xyz')
+        username = str(await ainput("Username to add as a contact\n>> "))
+        self.send_presence_subscription(pto=f"{username}@alumchat.xyz")
 
     def start_conversation(self):
         username = input("Username to send message to\n>> ")
         message = input("Message content\n>> ")
         self.send_message(f"{username}@alumchat.xyz", message, mtype='chat')
-        pass
-
-    def start_group_chat(self):
         pass
 
     async def delete_account(self):
