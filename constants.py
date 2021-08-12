@@ -25,7 +25,8 @@ Select an option to proceed:
 6 -> Join a group chat
 7 -> Define presence message
 8 -> Send a file
-9 -> Exit
+9 -> Show contact details
+10 -> Exit
 >> """
 
 

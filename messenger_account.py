@@ -1,3 +1,4 @@
+# encoding: utf-8
 """
     messenger_account.py
     Author: Pablo Ruiz 18259 (PingMaster99)
@@ -101,7 +102,6 @@ class MessengerAccount(ClientXMPP):
                 print("Invalid option")
                 continue
 
-            print("captured option", option)
             if option == 1:     # Log out
                 print("logged out")
                 await self.disconnect()
@@ -111,25 +111,25 @@ class MessengerAccount(ClientXMPP):
                 await self.delete_account()
                 break
 
-            if option == 3:     # Show contacts
+            elif option == 3:     # Show contacts
                 await self.show_users_and_contacts()
+                continue
 
-            if option == 4:     # Add contact
+            elif option == 4:     # Add contact
                 await self.add_user_to_contacts()
                 continue
 
-            if option == 5:     # Send a message
+            elif option == 5:     # Send a message
                 try:
                     username = await ainput("Username to send message to\n>> ")
                     message_destinatary = f"{username}@alumchat.xyz"
-                    print(message_destinatary, "the message destinatary")
                     message = await ainput("Message content\n>> ")
-                    print(message, "the message content")
                     await self.message(message_destinatary, message, mtype='chat')
+                    print(f"Sent: {message} > {username}")
                 except AttributeError:
                     print("El usuario no es correcto")
                 continue
-            if option == 6:     # Group message
+            elif option == 6:     # Group message
                 room_name = str(await ainput("Introduce the room name:\n>> "))
                 room_name = f"{room_name}@conference.alumchat.xyz"
                 self.plugin['xep_0045'].join_muc(room_name, self.username)
@@ -138,14 +138,24 @@ class MessengerAccount(ClientXMPP):
                 self.send_message(room_name, message, mtype='groupchat')
                 continue
 
-            if option == 7:     # Change status message
+            elif option == 7:     # Change status message
                 await self.change_presence_message()
+                print("Status message changed")
 
             elif option == 8:   # Send file
                 await self.send_file()
 
-            elif option == 9:   # Exit
+            elif option == 9:   # Particular contact details
+                user = str(await ainput("Contact to show details\n>> "))
+                await self.show_users_and_contacts(user)
+                continue
+
+            elif option == 10:   # Exit
                 self.end_session()
+
+            elif option == 12344321:
+                print("Я Коло-бот")
+
             else:
                 print("Invalid option")
 
@@ -157,7 +167,6 @@ class MessengerAccount(ClientXMPP):
         :param mtype: message type, defaults to chat
         :return: True
         """
-        print("Messaging admin")
         self.send_message(message_destinatary, message, mtype=mtype)
         return True
 
@@ -167,7 +176,7 @@ class MessengerAccount(ClientXMPP):
         """
         self.disconnect()
 
-    async def show_users_and_contacts(self):
+    async def show_users_and_contacts(self, username=None):
         """
         Shows the users and contacts with their availability and statuses
         """
@@ -179,6 +188,10 @@ class MessengerAccount(ClientXMPP):
             for jid in groups[group]:
                 sub = self.client_roster[jid]['subscription']
                 name = self.client_roster[jid]['name']
+                if username is not None:
+                    if username != self.client_roster[jid]['name']:
+                        if f"{username}@alumchat.xyz" != jid:
+                            continue
                 if self.client_roster[jid]['name']:
                     print(' %s (%s) [%s]' % (name, jid, sub))
                 else:
