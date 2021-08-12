@@ -18,3 +18,5 @@ Select an option to proceed:
 8 -> Exit
 >> """
 
+SERVER = "@192.168.56.1"
+

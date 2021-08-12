@@ -5,6 +5,9 @@ import logging
 import constants
 from registration import Registration
 
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(levelname)-8s %(message)s')
+
 def main():
     running = True
     while running:
@@ -19,7 +22,8 @@ def main():
         if option == 1:
             jid = input("Username: ")
             password = input("Password: ")
-            jid = f"{jid}@192.168.56.1"     #TODO: change this to alumchat
+            if constants.SERVER not in jid:  # TODO: change this to alumchat
+                jid += constants.SERVER
 
             xmpp = Registration(jid, password)
             xmpp.register_plugin('xep_0030')  # Service Discovery
@@ -33,9 +37,16 @@ def main():
         elif option == 2:
             jid = input("Username: ")
             password = input("Password: ")
+            if constants.SERVER not in jid:  #TODO: change this to alumchat
+                jid += constants.SERVER
+
             xmpp = MessengerAccount(jid, password)
+            xmpp['feature_mechanisms'].unencrypted_plain = True
+            xmpp.register_plugin('xep_0199')
             xmpp.connect()
-            xmpp.process()
+            print("Conectado!")
+            xmpp.process(forever=False)
+            xmpp.disconnect()
 
         elif option == 3:
             print("Thank you for using the XMPP secret chat")

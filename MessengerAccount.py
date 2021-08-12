@@ -1,8 +1,13 @@
+"""
+
+Reference: https://lab.louiz.org/poezio/slixmpp/-/blob/master/examples/roster_browser.py
+"""
+
 import asyncio
 import logging
 import constants
 from aioconsole import ainput
-from slixmpp import ClientXMPP
+from slixmpp import ClientXMPP, exceptions
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 class MessengerAccount(ClientXMPP):
@@ -17,27 +22,29 @@ class MessengerAccount(ClientXMPP):
         self.register_plugin('xep_0077')  # In-Band Registration
         self.register_plugin('xep_0045')  # Multi-User Chat
 
-
         self.add_event_handler("session_start", self.session_start)
         self.add_event_handler("session_start", self.messaging_app)
         self.add_event_handler("failed_auth", self.failed_auth)
+        self.add_event_handler("message", self.session_start)
+        self.add_event_handler("changed_status", self.wait_for_presences)
+        self.received = set()
+        self.presences_received = asyncio.Event()
 
+    async def session_start(self, event):
+        try:
+            await self.get_roster()
+        except exceptions.IqTimeout:
+            print("Request timed out")
 
-
-    def session_start(self, event):
         self.send_presence()
-        self.get_roster()
-        xmpp.send_message('admin@alumchat.xyz', 'hello', mtype='chat')
+
+
+
+
 
 
     def failed_auth(self, event):
-        quit()
-
-    def message(self, event):
-        xmpp.send_message('admin@alumchat.xyz', 'hello', mtype='chat')
-
-    def message2(self):
-        xmpp.send_message('admin@alumchat.xyz', 'hello', mtype='chat')
+        print("La cuenta introducida no existe")
 
     def validate_input(self, option):
         try:
@@ -52,43 +59,96 @@ class MessengerAccount(ClientXMPP):
 
         running = True
         while running:
-            option = int(input(constants.MAIN_MENU))
+            try:
+                option = int(await ainput(constants.MAIN_MENU))
+            except ValueError:
+                print("Invalid option")
+                continue
+
             print("captured option", option)
-            if option == 1:
+            if option == 1:     # Log out
                 print("logged out")
                 await self.disconnect()
-                running = False
-            if option == 2:
-                self.delete_account()
-            if option == 3:
-                self.show_users_contacts()
-            if option == 4:
-                self.add_user_to_contacts()
-            if option == 5:
-                username = await ainput("Username to send message to\n>> ")
-                message_destinatary = f"{username}@alumchat.xyz"
-                print(message_destinatary, "the message destinatary")
-                message = await ainput("Message content\n>> ")
-                self.send_message(message_destinatary, message, mtype='chat')
-            if option == 6:
-                self.start_group_chat()
-            if option == 7:
-                self.change_presence_message()
+                break
 
+            elif option == 2:   # Delete account
+                await self.delete_account()
+                break
+
+            if option == 3:     # Show contacts
+                await self.show_users_and_contacts()
+
+            if option == 4:     # Add contact TODO THIS
+                self.add_user_to_contacts()
+
+            if option == 5:     # Send a message
+                try:
+                    username = await ainput("Username to send message to\n>> ")
+                    message_destinatary = f"{username}@alumchat.xyz"
+                    print(message_destinatary, "the message destinatary")
+                    message = await ainput("Message content\n>> ")
+                    print(message, "the message content")
+                    await self.message(message_destinatary, message, mtype='chat')
+                except AttributeError:
+                    print("El usuario no es correcto")
+                continue
+            if option == 6:     # TODO THIS
+                self.start_group_chat()
+            if option == 7:     # Change status message
+                await self.change_presence_message()
+            elif option == 8:   # Exit
+                self.end_session()
             else:
                 print("Invalid option")
+
+    async def message(self, message_destinatary, message, mtype='chat'):
+        print("Messaging admin")
+        self.send_message(message_destinatary, message, mtype=mtype)
+        return True
 
     def end_session(self):
         self.disconnect()
 
-    def show_users_contacts(self):
-        roster = yield from self.get_roster()
-        print(roster, "the roster")
+    async def show_users_and_contacts(self):
+        print('Roster for %s' % self.boundjid.bare)
+        groups = self.client_roster.groups()
+        for group in groups:
+            print('\n%s' % group)
+            print('-' * 72)
+            for jid in groups[group]:
+                sub = self.client_roster[jid]['subscription']
+                name = self.client_roster[jid]['name']
+                if self.client_roster[jid]['name']:
+                    print(' %s (%s) [%s]' % (name, jid, sub))
+                else:
+                    print(' %s [%s]' % (jid, sub))
 
-        pass
-    def change_presence_message(self):
-        #send_prescence
-        self.make_presence(pstatus="Hi this is my new status")
+                connections = self.client_roster.presence(jid)
+                for res, pres in connections.items():
+                    show = 'available'
+                    if pres['show']:
+                        show = pres['show']
+                    print('   - %s (%s)' % (res, show))
+                    if pres['status']:
+                        print('       %s' % pres['status'])
+
+    def wait_for_presences(self, pres):
+        """
+        Track how many roster entries have received presence updates.
+        Reference: https://lab.louiz.org/poezio/slixmpp/-/blob/master/examples/roster_browser.py
+        """
+        self.received.add(pres['from'].bare)
+        if len(self.received) >= len(self.client_roster.keys()):
+            self.presences_received.set()
+        else:
+            self.presences_received.clear()
+
+    async def change_presence_message(self):
+        status = str(await ainput("Insert your new status (hint: away)\n>> "))
+        status_message = str(await ainput("Type your new status message\n>> "))
+        nickname = str(await ainput("Type in your new nickname\n>> "))
+
+        self.send_presence(pshow=status, pstatus=status_message, pnick=nickname)
 
     def add_user_to_contacts(self):
         # Subscribe
@@ -104,10 +164,23 @@ class MessengerAccount(ClientXMPP):
     def start_group_chat(self):
         pass
 
-    def delete_account(self):
-        engine = self.Iq()
-        engine['register']['remove'] = True
-        pass
+    async def delete_account(self):
+        resp = self.Iq()
+        resp['type'] = 'set'
+        resp['register']['remove'] = True
+
+        try:
+            await resp.send()
+            print(f"{self.boundjid}'s account has been removed")
+        except exceptions.IqError as e:
+            if e.iq['error']['code'] == '409':
+                print(f"Could not delete account: {resp['register']['username']}")
+            else:
+                print("Account could not be deleted")
+            await self.disconnect()
+        except exceptions.IqTimeout as e:
+            print("Timeout error, please try again")
+            await self.disconnect()
 
 
 if __name__ == '__main__':
