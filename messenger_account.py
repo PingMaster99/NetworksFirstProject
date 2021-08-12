@@ -16,8 +16,15 @@ asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 class MessengerAccount(ClientXMPP):
-
+    """
+    Client that uses the XMPP protocol to communicate
+    """
     def __init__(self, jid, password):
+        """
+        Initializes the client
+        :param jid: jid of the user
+        :param password: password to log in
+        """
         super().__init__(jid, password)
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
@@ -37,6 +44,10 @@ class MessengerAccount(ClientXMPP):
 
     @staticmethod
     def get_notification(event):
+        """
+        Prints a notification according to the event received
+        :param event: event received
+        """
         print(event['type'])
         if event['type'] in ('chat', 'normal'):
             print(f"New message from {event['from'].username}: {event['body']}")
@@ -51,9 +62,17 @@ class MessengerAccount(ClientXMPP):
 
     @staticmethod
     def group_chat_invite(event):
+        """
+        Prints a notification for group chat invites
+        :param event: group chat invite
+        """
         print(f"New groupchat invite. Room: {event['from']}")
 
     async def session_start(self, event):
+        """
+        Starts the session
+        :param event: start
+        """
         try:
             await self.get_roster()
         except exceptions.IqTimeout:
@@ -63,20 +82,17 @@ class MessengerAccount(ClientXMPP):
 
     @staticmethod
     def failed_auth(event):
-        print("La cuenta introducida no existe")
-
-    @staticmethod
-    def validate_input(option):
-        try:
-            option = int(option)
-            if 8 >= option >= 1:
-                return option
-            return False
-        except ValueError:
-            return False
+        """
+        Prints a message when login fails
+        :param event: failed credentials
+        """
+        print("Could not log in with the specified credentials")
 
     async def messaging_app(self, event):
-
+        """
+        Handles the main functionalities of the client
+        :param event: event to start the app (session start)
+        """
         running = True
         while running:
             try:
@@ -134,14 +150,27 @@ class MessengerAccount(ClientXMPP):
                 print("Invalid option")
 
     async def message(self, message_destinatary, message, mtype='chat'):
+        """
+        Sends a message to another user
+        :param message_destinatary: other user
+        :param message: content
+        :param mtype: message type, defaults to chat
+        :return: True
+        """
         print("Messaging admin")
         self.send_message(message_destinatary, message, mtype=mtype)
         return True
 
     def end_session(self):
+        """
+        Logs out of the client
+        """
         self.disconnect()
 
     async def show_users_and_contacts(self):
+        """
+        Shows the users and contacts with their availability and statuses
+        """
         print('Roster for %s' % self.boundjid.bare)
         groups = self.client_roster.groups()
         for group in groups:
@@ -166,7 +195,8 @@ class MessengerAccount(ClientXMPP):
 
     def wait_for_presences(self, pres):
         """
-        Track how many roster entries have received presence updates.
+        Tracks how many roster entries have received presence updates.
+        :param pres: prescence event
         """
         self.received.add(pres['from'].bare)
         if len(self.received) >= len(self.client_roster.keys()):
@@ -175,24 +205,35 @@ class MessengerAccount(ClientXMPP):
             self.presences_received.clear()
 
     async def change_presence_message(self):
-        status = str(await ainput("Insert your new status (hint: away/dnd/chat/xa)\n>> "))
+        """
+        Changes the availability, nickname, and status of a user.
+        """
+        status = str(await ainput("Insert your new availability (hint: away/dnd/chat/xa)\n>> "))
         status_message = str(await ainput("Type your new status message\n>> "))
         nickname = str(await ainput("Type in your new nickname\n>> "))
 
         self.send_presence(pshow=status, pstatus=status_message, pnick=nickname)
 
     async def add_user_to_contacts(self):
-        # Subscribe
+        """
+        Adds another user to the current user's contacts.
+        :return:
+        """
         username = str(await ainput("Username to add as a contact\n>> "))
         self.send_presence_subscription(pto=f"{username}@alumchat.xyz")
 
     def start_conversation(self):
+        """
+        Send a message to another user
+        """
         username = input("Username to send message to\n>> ")
         message = input("Message content\n>> ")
         self.send_message(f"{username}@alumchat.xyz", message, mtype='chat')
-        pass
 
     async def delete_account(self):
+        """
+        Deletes the current account.
+        """
         resp = self.Iq()
         resp['type'] = 'set'
         resp['register']['remove'] = True
@@ -211,6 +252,9 @@ class MessengerAccount(ClientXMPP):
             await self.disconnect()
 
     async def send_file(self):
+        """
+        Sends a file to another user
+        """
         filename = str(await(ainput("Introduce the name of the file to send with extension\n>> ")))
         recipient = str(await(ainput("Recipient's username\n>> ")))
         recipient += "@alumchat.xyz"

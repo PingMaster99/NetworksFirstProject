@@ -18,6 +18,9 @@ if constants.LOGGING:
 
 
 def main():
+    """
+    Main loop for the program functionality
+    """
     running = True
     while running:
         option = input(constants.APP_MENU)
