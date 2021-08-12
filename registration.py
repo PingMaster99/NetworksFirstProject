@@ -1,6 +1,8 @@
 import logging
 from slixmpp import ClientXMPP, exceptions
 # Reference: https://groups.google.com/g/sleekxmpp-discussion/c/iAFJGcpH-Ps
+
+
 class Registration(ClientXMPP):
     def __init__(self, jid, password):
         ClientXMPP.__init__(self, jid, password)
@@ -12,7 +14,6 @@ class Registration(ClientXMPP):
         self.send_presence()
         await self.get_roster()
         await self.disconnect()
-
 
     async def register(self, event):
         resp = self.Iq()

@@ -37,14 +37,14 @@ def main():
         elif option == 2:
             jid = input("Username: ")
             password = input("Password: ")
-            if constants.SERVER not in jid:  #TODO: change this to alumchat
+            if constants.SERVER not in jid:
                 jid += constants.SERVER
 
             xmpp = MessengerAccount(jid, password)
             xmpp['feature_mechanisms'].unencrypted_plain = True
             xmpp.register_plugin('xep_0199')
             xmpp.connect()
-            print("Conectado!")
+            print("Connected!")
             xmpp.process(forever=False)
             xmpp.disconnect()
 

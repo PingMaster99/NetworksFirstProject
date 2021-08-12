@@ -15,7 +15,6 @@ class MessengerAccount(ClientXMPP):
 
     def __init__(self, jid, password):
         super().__init__(jid, password)
-
         self.register_plugin('xep_0030')  # Service Discovery
         self.register_plugin('xep_0199')  # XMPP Ping
         self.register_plugin('xep_0059')  # Result set management
@@ -173,7 +172,7 @@ class MessengerAccount(ClientXMPP):
             self.presences_received.clear()
 
     async def change_presence_message(self):
-        status = str(await ainput("Insert your new status (hint: away)\n>> "))
+        status = str(await ainput("Insert your new status (hint: away/dnd/chat/xa)\n>> "))
         status_message = str(await ainput("Type your new status message\n>> "))
         nickname = str(await ainput("Type in your new nickname\n>> "))
 
