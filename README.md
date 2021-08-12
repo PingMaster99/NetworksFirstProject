@@ -9,8 +9,8 @@ CLI client that supports the XMPP protocol. Includes account administration and 
 - Python 3.7+
 
 ## Installation
-1. Clone this repository: git clone https://github.com/PingMaster99/NetworksFirstProject
-2. Run the command: python main.py in a command window on the folder location
+1. Clone this repository: ```git clone https://github.com/PingMaster99/NetworksFirstProject```
+2. Run the command: ```python main.py``` in a command window on the folder location
 3. Follow on screen instructions
 4. To edit the logging configuration, set LOGGING to True in constants.py
 
