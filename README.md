@@ -1,5 +1,9 @@
 # NetworksFirstProject
-CLI client that supports the XMPP protocol. Includes account administration and communication. 
+CLI client that supports the XMPP protocol. Includes account administration and communication.
+
+Connects to the server: ```alumchat.xyz```
+
+#### NOTE: You can also test the program locally by changing ```SERVER = <Your Ipv4>``` in the constants.py file.  
 
 ## Requirements
 - asyncio
