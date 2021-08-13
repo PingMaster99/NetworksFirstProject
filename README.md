@@ -3,7 +3,11 @@ CLI client that supports the XMPP protocol. Includes account administration and 
 
 Connects to the server: ```alumchat.xyz```
 
-#### NOTE: You can also test the program locally by changing ```SERVER = <Your Ipv4>``` in the constants.py file.  
+#### NOTE: You can also test the program locally by changing ```SERVER = <Your IPv4>``` in the constants.py file.  
+This project has been proven to work locally with a Spark client and Openfire Server running on alumchat.xyz with a custom DNS to your local IPv4 address. 
+To configure a local server, type in:
+
+```<Your IPv4 alumchat.xyz>``` inside the hosts file located in: C:/Windows/System32/drivers/etc. 
 
 ## Requirements
 - asyncio
